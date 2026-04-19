@@ -1,0 +1,85 @@
+--// miu GUI Blade Ball Style (Clean + Mini UI)
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Name = "miu_gui"
+
+-- Main Frame
+local Main = Instance.new("Frame")
+Main.Parent = ScreenGui
+Main.Size = UDim2.new(0, 220, 0, 160)
+Main.Position = UDim2.new(0.5, -110, 0.5, -80)
+Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Main.Active = true
+Main.Draggable = true
+
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,10)
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Parent = Main
+Title.Size = UDim2.new(1,0,0,30)
+Title.BackgroundTransparency = 1
+Title.Text = "miu"
+Title.TextColor3 = Color3.fromRGB(255, 120, 200)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
+
+-- Toggle Frame
+local ToggleFrame = Instance.new("Frame")
+ToggleFrame.Parent = Main
+ToggleFrame.Size = UDim2.new(0, 50, 0, 24)
+ToggleFrame.Position = UDim2.new(1, -60, 0, 35)
+ToggleFrame.BackgroundColor3 = Color3.fromRGB(150,0,0)
+
+Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(1,0)
+
+-- Toggle Knob
+local Knob = Instance.new("Frame")
+Knob.Parent = ToggleFrame
+Knob.Size = UDim2.new(0,20,0,20)
+Knob.Position = UDim2.new(0,2,0,2)
+Knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+
+Instance.new("UICorner", Knob).CornerRadius = UDim.new(1,0)
+
+-- Button click
+local Button = Instance.new("TextButton")
+Button.Parent = ToggleFrame
+Button.Size = UDim2.new(1,0,1,0)
+Button.BackgroundTransparency = 1
+Button.Text = ""
+
+-- Status Label
+local Status = Instance.new("TextLabel")
+Status.Parent = Main
+Status.Size = UDim2.new(1,0,0,30)
+Status.Position = UDim2.new(0,0,0,80)
+Status.BackgroundTransparency = 1
+Status.Text = "Status: OFF"
+Status.TextColor3 = Color3.fromRGB(255,255,255)
+Status.Font = Enum.Font.Gotham
+Status.TextSize = 14
+
+-- Logic toggle
+local on = false
+
+Button.MouseButton1Click:Connect(function()
+	on = not on
+	
+	local goalPos = on and UDim2.new(1,-22,0,2) or UDim2.new(0,2,0,2)
+	local bgColor = on and Color3.fromRGB(0,170,0) or Color3.fromRGB(150,0,0)
+	
+	TweenService:Create(Knob, TweenInfo.new(0.2), {Position = goalPos}):Play()
+	TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {BackgroundColor3 = bgColor}):Play()
+	
+	Status.Text = "Status: " .. (on and "ON" or "OFF")
+end)
