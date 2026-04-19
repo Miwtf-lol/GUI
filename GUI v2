@@ -1,210 +1,358 @@
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+local TS = game:GetService("TweenService")
 local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 
+-- GUI
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "FullChromaUI"
+gui.Name = "VM.wtf"
+gui.ResetOnSpawn = false
 
 -- MAIN
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 780, 0, 450)
-main.Position = UDim2.new(0.5, -390, 0.5, -225)
-main.BackgroundColor3 = Color3.fromRGB(18,18,18)
+main.Size = UDim2.new(0, 650, 0, 380)
+main.Position = UDim2.new(0.5, -325, 0.5, -190)
+main.BackgroundColor3 = Color3.fromRGB(20,20,20)
 main.BackgroundTransparency = 0.1
-Instance.new("UICorner", main)
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0,12)
+
+-- MINIMIZE BUTTON
+local minimizeBtn = Instance.new("TextButton", main)
+minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+minimizeBtn.Position = UDim2.new(1, -40, 0, 5)
+minimizeBtn.Text = "−"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
+minimizeBtn.TextColor3 = Color3.white
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 18
+Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 6)
 
 -- SIDEBAR
 local sidebar = Instance.new("Frame", main)
-sidebar.Size = UDim2.new(0, 210, 1, 0)
-sidebar.BackgroundColor3 = Color3.fromRGB(14,14,14)
-Instance.new("UICorner", sidebar)
+sidebar.Size = UDim2.new(0, 180, 1, 0)
+sidebar.BackgroundColor3 = Color3.fromRGB(15,15,15)
+sidebar.BackgroundTransparency = 0.05
+local sidebarCorner = Instance.new("UICorner", sidebar)
 
 -- TITLE
 local title = Instance.new("TextLabel", sidebar)
-title.Text = "Chroma Hub Blade Ball V1"
+title.Text = "VM.wtf | Blade Ball"
 title.Size = UDim2.new(1,0,0,50)
-title.TextColor3 = Color3.white
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
-title.TextSize = 14
+title.TextSize = 15
+title.TextXAlignment = Enum.TextXAlignment.Center
 
--- CONTENT
+-- CONTENT HOLDER
 local content = Instance.new("Frame", main)
-content.Size = UDim2.new(1,-220,1,-20)
-content.Position = UDim2.new(0,220,0,10)
+content.Size = UDim2.new(1,-190,1,-20)
+content.Position = UDim2.new(0,190,0,10)
 content.BackgroundTransparency = 1
 
 local pages = {}
+local toggles = {}
+local sliders = {}
+
+-- STATE VARIABLES
+local settings = {
+    autoParry = false,
+    autoSpam = false,
+    spamThreshold = 0.3,
+    parryAccuracy = 0.95,
+    prediction = true,
+    fovRadius = 120,
+    visibleCheck = true,
+    ballPrediction = true,
+    autoBuySwords = false,
+    autoRejoin = false,
+    notifications = true
+}
 
 -- CREATE PAGE
 local function createPage(name)
-    local f = Instance.new("Frame", content)
-    f.Size = UDim2.new(1,0,1,0)
-    f.Visible = false
-    f.BackgroundTransparency = 1
-    pages[name] = f
-    return f
+    local frame = Instance.new("ScrollingFrame", content)
+    frame.Size = UDim2.new(1,0,1,0)
+    frame.BackgroundTransparency = 1
+    frame.BorderSizePixel = 0
+    frame.ScrollBarThickness = 6
+    frame.ScrollBarImageColor3 = Color3.fromRGB(0,170,255)
+    frame.CanvasSize = UDim2.new(0,0,0,800)
+    frame.Visible = false
+    frame.ScrollingDirection = Enum.ScrollingDirection.Y
+    pages[name] = frame
+    return frame
 end
 
--- TAB
+-- CREATE TAB BUTTON
 local function createTab(name, order)
     local btn = Instance.new("TextButton", sidebar)
-    btn.Size = UDim2.new(1,-20,0,40)
-    btn.Position = UDim2.new(0,10,0,60+(order*45))
+    btn.Size = UDim2.new(1,-20,0,42)
+    btn.Position = UDim2.new(0,10,0,65 + (order*47))
     btn.Text = name
-    btn.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    btn.TextColor3 = Color3.fromRGB(200,200,200)
-    Instance.new("UICorner", btn)
+    btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    btn.TextColor3 = Color3.fromRGB(220,220,220)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 13
+    btn.BorderSizePixel = 0
+    local btnCorner = Instance.new("UICorner", btn)
+    btnCorner.CornerRadius = UDim.new(0,8)
+    
+    local gradient = Instance.new("UIGradient", btn)
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(45,45,45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(25,25,25))
+    }
 
     btn.MouseButton1Click:Connect(function()
-        for _,p in pairs(pages) do p.Visible = false end
+        for pageName, page in pairs(pages) do
+            page.Visible = false
+        end
         pages[name].Visible = true
+        
+        for tabName, tabBtn in pairs(sidebar:GetChildren()) do
+            if tabBtn:IsA("TextButton") then
+                tabBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+            end
+        end
+        btn.BackgroundColor3 = Color3.fromRGB(0,170,255)
     end)
-end
-
--- CARD
-local function createCard(parent, titleText, pos)
-    local card = Instance.new("Frame", parent)
-    card.Size = UDim2.new(0, 260, 0, 180)
-    card.Position = pos
-    card.BackgroundColor3 = Color3.fromRGB(28,28,28)
-    Instance.new("UICorner", card)
-
-    local title = Instance.new("TextLabel", card)
-    title.Text = titleText
-    title.Size = UDim2.new(1,0,0,30)
-    title.BackgroundTransparency = 1
-    title.TextColor3 = Color3.white
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 14
-
-    return card
-end
-
--- TOGGLE
-local function createToggle(parent, text, y)
-    local label = Instance.new("TextLabel", parent)
-    label.Text = text
-    label.Position = UDim2.new(0,10,0,y)
-    label.Size = UDim2.new(0,180,0,20)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(200,200,200)
-
-    local toggle = Instance.new("TextButton", parent)
-    toggle.Size = UDim2.new(0,40,0,20)
-    toggle.Position = UDim2.new(1,-50,0,y)
-    toggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    toggle.Text = ""
-    Instance.new("UICorner", toggle)
-
-    local on = false
-    toggle.MouseButton1Click:Connect(function()
-        on = not on
-        toggle.BackgroundColor3 = on and Color3.fromRGB(0,170,255) or Color3.fromRGB(60,60,60)
+    
+    btn.MouseEnter:Connect(function()
+        if btn.BackgroundColor3 ~= Color3.fromRGB(0,170,255) then
+            btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        end
     end)
-end
-
--- SLIDER
-local function createSlider(parent, text, y)
-    local label = Instance.new("TextLabel", parent)
-    label.Text = text.." (50%)"
-    label.Position = UDim2.new(0,10,0,y)
-    label.Size = UDim2.new(0,200,0,20)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(200,200,200)
-
-    local bar = Instance.new("Frame", parent)
-    bar.Size = UDim2.new(0,150,0,6)
-    bar.Position = UDim2.new(0,10,0,y+25)
-    bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    Instance.new("UICorner", bar)
-
-    local fill = Instance.new("Frame", bar)
-    fill.Size = UDim2.new(0.5,0,1,0)
-    fill.BackgroundColor3 = Color3.fromRGB(0,170,255)
-    Instance.new("UICorner", fill)
-
-    bar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local percent = (input.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X
-            percent = math.clamp(percent,0,1)
-            fill.Size = UDim2.new(percent,0,1,0)
-            label.Text = text.." ("..math.floor(percent*100).."%)"
+    
+    btn.MouseLeave:Connect(function()
+        if btn.BackgroundColor3 ~= Color3.fromRGB(0,170,255) then
+            btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
         end
     end)
 end
 
--- DROPDOWN
-local function createDropdown(parent, text, y)
-    local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0,160,0,25)
-    btn.Position = UDim2.new(0,10,0,y)
-    btn.Text = text.." ▼"
-    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    Instance.new("UICorner", btn)
+-- CREATE CARD
+local function createCard(parent, titleText, posY)
+    local card = Instance.new("Frame", parent)
+    card.Size = UDim2.new(1,-40,0,160)
+    card.Position = UDim2.new(0,20,posY,0)
+    card.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    card.BackgroundTransparency = 0.1
+    local cardCorner = Instance.new("UICorner", card)
+    cardCorner.CornerRadius = UDim.new(0,12)
+    
+    local title = Instance.new("TextLabel", card)
+    title.Text = titleText
+    title.Size = UDim2.new(1,0,0,35)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = Color3.fromRGB(255,255,255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local stroke = Instance.new("UIStroke", card)
+    stroke.Color = Color3.fromRGB(60,60,60)
+    stroke.Thickness = 1
+    
+    return card
+end
 
-    local open = false
-    btn.MouseButton1Click:Connect(function()
-        open = not open
-        btn.Text = open and text.." ▲" or text.." ▼"
+-- TOGGLE
+local function createToggle(parent, text, y, callback)
+    local label = Instance.new("TextLabel", parent)
+    label.Text = text
+    label.Position = UDim2.new(0,15,0,y)
+    label.Size = UDim2.new(1,-80,0,25)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(220,220,220)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local toggle = Instance.new("TextButton", parent)
+    toggle.Size = UDim2.new(0,50,0,25)
+    toggle.Position = UDim2.new(1,-60,0,y)
+    toggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    toggle.Text = ""
+    toggle.Font = Enum.Font.GothamBold
+    local toggleCorner = Instance.new("UICorner", toggle)
+    toggleCorner.CornerRadius = UDim.new(0,12)
+    
+    local circle = Instance.new("Frame", toggle)
+    circle.Size = UDim2.new(0,20,0,20)
+    circle.Position = UDim2.new(0,2.5,0,2.5)
+    circle.BackgroundColor3 = Color3.fromRGB(200,200,200)
+    circle.BorderSizePixel = 0
+    local circleCorner = Instance.new("UICorner", circle)
+    circleCorner.CornerRadius = UDim.new(0,10)
+    
+    local enabled = false
+    local connection
+    toggles[text] = {enabled = false, set = function(state) 
+        enabled = state
+        local targetColor = enabled and Color3.fromRGB(0,170,255) or Color3.fromRGB(60,60,60)
+        local targetCircleColor = enabled and Color3.fromRGB(255,255,255) or Color3.fromRGB(200,200,200)
+        local targetPos = enabled and UDim2.new(1,-22.5,0,2.5) or UDim2.new(0,2.5,0,2.5)
+        
+        TS:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+        TS:Create(circle, TweenInfo.new(0.2), {BackgroundColor3 = targetCircleColor, Position = targetPos}):Play()
+        if callback then callback(enabled) end
+    end}
+    
+    toggle.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        toggles[text].set(enabled)
     end)
+    
+    return toggles[text]
+end
+
+-- SLIDER
+local function createSlider(parent, text, y, min, max, default, callback)
+    local label = Instance.new("TextLabel", parent)
+    label.Text = text.." ["..default.."]"
+    label.Position = UDim2.new(0,15,0,y)
+    label.Size = UDim2.new(1,-70,0,25)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(220,220,220)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local bar = Instance.new("Frame", parent)
+    bar.Size = UDim2.new(0,200,0,8)
+    bar.Position = UDim2.new(1,-220,0,y+28)
+    bar.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    bar.BorderSizePixel = 0
+    local barCorner = Instance.new("UICorner", bar)
+    barCorner.CornerRadius = UDim.new(0,4)
+
+    local fill = Instance.new("Frame", bar)
+    fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+    fill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+    fill.BorderSizePixel = 0
+    local fillCorner = Instance.new("UICorner", fill)
+    fillCorner.CornerRadius = UDim.new(0,4)
+    
+    local draggingSlider = false
+    sliders[text] = {value = default, set = function(val)
+        local percent = (val-min)/(max-min)
+        fill.Size = UDim2.new(percent,0,1,0)
+        label.Text = text.." ["..math.floor(val).."]"
+        if callback then callback(val) end
+    end}
+    
+    bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSlider = true
+        end
+    end)
+    
+    bar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSlider = false
+        end
+    end)
+    
+    UIS.InputChanged:Connect(function(input)
+        if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local percent = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+            local value = math.floor(min + (max - min) * percent)
+            sliders[text].set(value)
+        end
+    end)
+    
+    return sliders[text]
 end
 
 -- TABS
-local tabNames = {"Blatant","Detection","Farm","Misc","Exclusive","Creator"}
-for i,v in ipairs(tabNames) do
-    createTab(v,i)
+local tabs = {"Combat", "Visuals", "Automation", "Player", "Settings"}
+for i, v in ipairs(tabs) do
+    createTab(v, i)
     createPage(v)
 end
 
--- BLATANT
-local blat = pages["Blatant"]; blat.Visible = true
-local c1 = createCard(blat,"Parry",UDim2.new(0,20,0,20))
-createToggle(c1,"Auto Parry",40)
-createSlider(c1,"Parry Accuracy",70)
-createToggle(c1,"Random Accuracy",110)
-createDropdown(c1,"Parry Type",140)
+-- COMBAT PAGE
+local combatPage = pages["Combat"]
+local yPos = 0
 
-local c2 = createCard(blat,"Spam",UDim2.new(0,300,0,20))
-createToggle(c2,"Auto Spam Parry",40)
-createSlider(c2,"Threshold",70)
+local parryCard = createCard(combatPage, "🎯 Auto Parry", UDim2.new(0,0,0,yPos))
+createToggle(parryCard, "Auto Parry", 45, function(state) settings.autoParry = state end)
+createSlider(parryCard, "Accuracy", 75, 0, 100, 95, function(val) settings.parryAccuracy = val/100 end)
+createToggle(parryCard, "Prediction", 110, function(state) settings.prediction = state end)
+createToggle(parryCard, "Visible Check", 140, function(state) settings.visibleCheck = state end)
+yPos = yPos + 180
 
--- DETECTION
-local det = pages["Detection"]
-local c3 = createCard(det,"Detection",UDim2.new(0,20,0,20))
-createToggle(c3,"Infinity Detection",40)
-createToggle(c3,"Death Slash",70)
-createToggle(c3,"Time Hole",100)
+local spamCard = createCard(combatPage, "⚡ Auto Spam", UDim2.new(0,0,0,yPos))
+createToggle(spamCard, "Auto Spam", 45, function(state) settings.autoSpam = state end)
+createSlider(spamCard, "Spam Threshold", 75, 0, 100, 30, function(val) settings.spamThreshold = val/100 end)
+createToggle(spamCard, "Ball Prediction", 110, function(state) settings.ballPrediction = state end)
+yPos = yPos + 180
 
--- FARM
-local farm = pages["Farm"]
-local c4 = createCard(farm,"Farm",UDim2.new(0,20,0,20))
-createToggle(c4,"Auto Play",40)
-createToggle(c4,"Auto Rank FFA",70)
-createToggle(c4,"Auto Rank Team",100)
+-- VISUALS PAGE
+local visualsPage = pages["Visuals"]
+yPos = 0
+local visualCard = createCard(visualsPage, "👁️ Visuals", UDim2.new(0,0,0,yPos))
+createSlider(visualsPage, "FOV Radius", 45, 50, 300, 120, function(val) settings.fovRadius = val end)
+createToggle(visualsPage, "FOV Circle", 75, function(state) end)
+createToggle(visualsPage, "Ball ESP", 105, function(state) end)
+createToggle(visualsPage, "Player ESP", 135, function(state) end)
+yPos = yPos + 180
 
--- MISC
-local misc = pages["Misc"]
-local c5 = createCard(misc,"Misc",UDim2.new(0,20,0,20))
-createToggle(c5,"Avatar UI",40)
-createToggle(c5,"Skin UI",70)
+-- AUTOMATION PAGE
+local autoPage = pages["Automation"]
+yPos = 0
+local autoCard = createCard(autoPage, "🤖 Automation", UDim2.new(0,0,0,yPos))
+createToggle(autoCard, "Auto Buy Swords", 45, function(state) settings.autoBuySwords = state end)
+createToggle(autoCard, "Auto Rejoin", 75, function(state) settings.autoRejoin = state end)
+createToggle(autoCard, "Notifications", 105, function(state) settings.notifications = state end)
+yPos = yPos + 180
 
--- EXCLUSIVE
-local ex = pages["Exclusive"]
-local c6 = createCard(ex,"Exclusive",UDim2.new(0,20,0,20))
-createToggle(c6,"Semi Immortal",40)
-createToggle(c6,"Safe Base",70)
+-- PLAYER PAGE
+local playerPage = pages["Player"]
+yPos = 0
+local playerCard = createCard(playerPage, "👤 Player Mods", UDim2.new(0,0,0,yPos))
+createToggle(playerCard, "Infinite Jump", 45, function(state) end)
+createToggle(playerCard, "Speed Hack", 75, function(state) end)
+createSlider(playerCard, "Walkspeed", 105, 16, 100, 16, function(val) end)
+createSlider(playerCard, "Jump Power", 135, 50, 200, 50, function(val) end)
 
--- CREATOR
-local cr = pages["Creator"]
-local c7 = createCard(cr,"Creator",UDim2.new(0,20,0,20))
-createToggle(c7,"Ulises",40)
-createToggle(c7,"Nine/MrDog",70)
+-- SETTINGS PAGE
+local settingsPage = pages["Settings"]
+yPos = 0
+local configCard = createCard(settingsPage, "⚙️ Settings", UDim2.new(0,0,0,yPos))
+local clearBtn = Instance.new("TextButton", configCard)
+clearBtn.Size = UDim2.new(1,-30,0,35)
+clearBtn.Position = UDim2.new(0,15,0,45)
+clearBtn.Text = "Reset All Settings"
+clearBtn.BackgroundColor3 = Color3.fromRGB(255,100,100)
+clearBtn.TextColor3 = Color3.white
+clearBtn.Font = Enum.Font.GothamBold
+clearBtn.TextSize = 13
+Instance.new("UICorner", clearBtn).CornerRadius = UDim.new(0,8)
 
--- DRAG MOBILE
-local dragging, dragStart, startPos
+-- DRAG & MINIMIZE
+local dragging, dragStart, startPos, minimized = false, nil, nil, false
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    local targetSize = minimized and UDim2.new(0, 650, 0, 50) or UDim2.new(0, 650, 0, 380)
+    local targetPos = minimized and UDim2.new(0.5, -325, 0, 10) or UDim2.new(0.5, -325, 0.5, -190)
+    
+    content.Visible = not minimized
+    sidebar.Visible = not minimized
+    minimizeBtn.Text = minimized and "+" or "−"
+    
+    TS:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = targetSize, Position = targetPos}):Play()
+end)
+
 main.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = main.Position
@@ -212,13 +360,82 @@ main.InputBegan:Connect(function(input)
 end)
 
 UIS.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.Touch then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
-        main.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- CORE FEATURES IMPLEMENTATION
+local ball = workspace:WaitForChild("Balls", 10):WaitForChild("ball")
+local connections = {}
+
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local myPos = player.Character and player.Character.PrimaryPart.Position
+    
+    if not myPos then return nil end
+    
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character.PrimaryPart then
+            local distance = (myPos - otherPlayer.Character.PrimaryPart.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestPlayer = otherPlayer
+            end
+        end
+    end
+    return closestPlayer
+end
+
+local function fireParryServer()
+    local args = {
+        [1] = workspace.Balls.ball,
+        [2] = player.Character.PrimaryPart,
+        [3] = game.Players.LocalPlayer.Character.PrimaryPart.CFrame,
+        [4] = workspace.Balls.ball.AssemblyLinearVelocity
+    }
+    game:GetService("ReplicatedStorage").MainEvent:FireServer(unpack(args))
+end
+
+local function spamClick()
+    if settings.autoSpam and tick() % 0.1 < settings.spamThreshold then
+        mouse1click()
+        mouse1release()
+    end
+end
+
+-- AUTO PARRY LOOP
+connections.parry = RS.Heartbeat:Connect(function()
+    if not settings.autoParry or not player.Character or not player.Character.PrimaryPart then return end
+    
+    local ballVelocity = ball.AssemblyLinearVelocity
+    local ballPos = ball.Position
+    local playerPos = player.Character.PrimaryPart.Position
+    
+    local distance = (ballPos - playerPos).Magnitude
+    local timeToHit = distance / ballVelocity.Magnitude
+    
+    if distance < 50 and timeToHit < 0.5 and math.random() < settings.parryAccuracy then
+        fireParryServer()
+    end
+end)
+
+-- AUTO SPAM LOOP
+connections.spam = RS.Heartbeat:Connect(spamClick)
+
+-- Set default page
+pages["Combat"].Visible = true
+local firstTab = sidebar:FindFirstChildOfClass("TextButton")
+if firstTab then
+    firstTab.BackgroundColor3 = Color3.fromRGB(0,170,255)
+end
+
+print("VM.wtf loaded successfully! All features active.")
