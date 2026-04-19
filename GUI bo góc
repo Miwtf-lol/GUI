@@ -1,96 +1,159 @@
---// miu UI (Replica Style - NO FUNCTION)
+--// miu UI (Safe Version)
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.Name = "miuGUI"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Name = "miu_ui"
 
--- Main Frame
-local Main = Instance.new("Frame")
-Main.Parent = ScreenGui
-Main.Size = UDim2.new(0, 240, 0, 200)
-Main.Position = UDim2.new(0.5, -120, 0.5, -100)
-Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Main.Active = true
-Main.Draggable = true
+-- Main
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 240, 0, 230)
+MainFrame.Position = UDim2.new(0.5, -120, 0.5, -115)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0,10)
-Instance.new("UIStroke", Main).Color = Color3.fromRGB(60,60,60)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(60, 60, 60)
 
 -- Title
 local Title = Instance.new("TextLabel")
-Title.Parent = Main
-Title.Size = UDim2.new(1,0,0,30)
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "miu UI"
+Title.TextColor3 = Color3.fromRGB(255, 120, 200)
 Title.BackgroundTransparency = 1
-Title.Text = "miu"
-Title.TextColor3 = Color3.fromRGB(255,255,255)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 18
 
--- Footer
-local Footer = Instance.new("TextLabel")
-Footer.Parent = Main
-Footer.Size = UDim2.new(1,0,0,16)
-Footer.Position = UDim2.new(0,0,1,-16)
-Footer.BackgroundTransparency = 1
-Footer.Text = "by miu"
-Footer.TextColor3 = Color3.fromRGB(150,150,150)
-Footer.Font = Enum.Font.Gotham
-Footer.TextSize = 12
+-- Function tạo toggle
+local function CreateToggle(name, posY)
+	local Frame = Instance.new("Frame", MainFrame)
+	Frame.Size = UDim2.new(0, 200, 0, 40)
+	Frame.Position = UDim2.new(0.5, -100, 0, posY)
+	Frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,8)
 
--- Inner Frame
-local Inner = Instance.new("Frame")
-Inner.Parent = Main
-Inner.Size = UDim2.new(1,-20,1,-70)
-Inner.Position = UDim2.new(0,10,0,40)
-Inner.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	local Label = Instance.new("TextLabel", Frame)
+	Label.Size = UDim2.new(1,-60,1,0)
+	Label.Position = UDim2.new(0,10,0,0)
+	Label.Text = name
+	Label.TextColor3 = Color3.fromRGB(255,255,255)
+	Label.BackgroundTransparency = 1
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextSize = 15
+	Label.TextXAlignment = Enum.TextXAlignment.Left
 
-Instance.new("UICorner", Inner).CornerRadius = UDim.new(0,8)
+	local Toggle = Instance.new("Frame", Frame)
+	Toggle.Size = UDim2.new(0,46,0,22)
+	Toggle.Position = UDim2.new(1,-56,0.5,-11)
+	Toggle.BackgroundColor3 = Color3.fromRGB(150,0,0)
+	Instance.new("UICorner", Toggle).CornerRadius = UDim.new(1,0)
 
--- Label
-local Label = Instance.new("TextLabel")
-Label.Parent = Inner
-Label.Size = UDim2.new(1,-60,0,30)
-Label.Position = UDim2.new(0,10,0,5)
-Label.BackgroundTransparency = 1
-Label.Text = "Feature"
-Label.TextColor3 = Color3.fromRGB(255,255,255)
-Label.Font = Enum.Font.GothamMedium
-Label.TextSize = 16
-Label.TextXAlignment = Enum.TextXAlignment.Left
+	local Knob = Instance.new("Frame", Toggle)
+	Knob.Size = UDim2.new(0,18,0,18)
+	Knob.Position = UDim2.new(0,2,0,2)
+	Knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	Instance.new("UICorner", Knob).CornerRadius = UDim.new(1,0)
 
--- Toggle Background
-local Toggle = Instance.new("Frame")
-Toggle.Parent = Inner
-Toggle.Size = UDim2.new(0,46,0,22)
-Toggle.Position = UDim2.new(1,-56,0,9)
-Toggle.BackgroundColor3 = Color3.fromRGB(150,0,0)
+	local Btn = Instance.new("TextButton", Toggle)
+	Btn.Size = UDim2.new(1,0,1,0)
+	Btn.BackgroundTransparency = 1
+	Btn.Text = ""
 
-Instance.new("UICorner", Toggle).CornerRadius = UDim.new(1,0)
+	local state = false
+	Btn.MouseButton1Click:Connect(function()
+		state = not state
+		local bg = state and Color3.fromRGB(0,170,0) or Color3.fromRGB(150,0,0)
+		local pos = state and UDim2.new(1,-20,0,2) or UDim2.new(0,2,0,2)
+		TweenService:Create(Toggle, TweenInfo.new(0.2), {BackgroundColor3 = bg}):Play()
+		TweenService:Create(Knob, TweenInfo.new(0.2), {Position = pos}):Play()
+	end)
+end
 
--- Toggle Knob
-local Knob = Instance.new("Frame")
-Knob.Parent = Toggle
-Knob.Size = UDim2.new(0,18,0,18)
-Knob.Position = UDim2.new(0,2,0,2)
-Knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+-- Toggles (demo only)
+CreateToggle("Auto Parry (Demo)", 40)
+CreateToggle("Parry Spam (Demo)", 90)
 
-Instance.new("UICorner", Knob).CornerRadius = UDim.new(1,0)
+-- Server Hop button (giữ nguyên)
+local RejoinBtn = Instance.new("TextButton")
+RejoinBtn.Parent = MainFrame
+RejoinBtn.Size = UDim2.new(0, 120, 0, 30)
+RejoinBtn.Position = UDim2.new(0.5, -60, 1, -50)
+RejoinBtn.Text = "Server Hop"
+RejoinBtn.TextColor3 = Color3.fromRGB(255,255,255)
+RejoinBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+RejoinBtn.Font = Enum.Font.GothamBold
+RejoinBtn.TextSize = 14
+Instance.new("UICorner", RejoinBtn).CornerRadius = UDim.new(0,8)
 
--- Fake Input Box
-local Box = Instance.new("TextBox")
-Box.Parent = Inner
-Box.Size = UDim2.new(1,-20,0,25)
-Box.Position = UDim2.new(0,10,0,45)
-Box.PlaceholderText = "Enter text..."
-Box.Text = ""
-Box.BackgroundColor3 = Color3.fromRGB(50,50,50)
-Box.TextColor3 = Color3.fromRGB(255,255,255)
-Box.Font = Enum.Font.Gotham
-Box.TextSize = 14
+RejoinBtn.MouseButton1Click:Connect(function()
+	local PlaceId = game.PlaceId
+	local JobId = game.JobId
+	TeleportService:TeleportToPlaceInstance(PlaceId, JobId, LocalPlayer)
+end)
+--// PATCH: đổi text + thêm hiệu ứng (SAFE)
 
-Instance.new("UICorner", Box).CornerRadius = UDim.new(0,6)
+-- đổi chữ
+Label.Text = "Auto Parry"
+
+-- tạo status nhỏ
+local Status = Instance.new("TextLabel")
+Status.Parent = InnerFrame
+Status.Size = UDim2.new(0, 100, 0, 15)
+Status.Position = UDim2.new(0, 10, 1, -18)
+Status.BackgroundTransparency = 1
+Status.Text = "OFF"
+Status.TextColor3 = Color3.fromRGB(255, 80, 80)
+Status.Font = Enum.Font.GothamBold
+Status.TextSize = 12
+Status.TextXAlignment = Enum.TextXAlignment.Left
+
+-- notification function
+local function Notify(text)
+	local n = Instance.new("TextLabel")
+	n.Parent = ScreenGui
+	n.Size = UDim2.new(0, 200, 0, 40)
+	n.Position = UDim2.new(1, -210, 1, -60)
+	n.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	n.TextColor3 = Color3.fromRGB(255,255,255)
+	n.Text = text
+	n.Font = Enum.Font.GothamBold
+	n.TextSize = 14
+	
+	Instance.new("UICorner", n).CornerRadius = UDim.new(0,8)
+
+	-- fade in
+	n.BackgroundTransparency = 1
+	n.TextTransparency = 1
+	game:GetService("TweenService"):Create(n, TweenInfo.new(0.3), {
+		BackgroundTransparency = 0,
+		TextTransparency = 0
+	}):Play()
+
+	-- auto remove
+	game:GetService("Debris"):AddItem(n, 2)
+end
+
+-- thêm hiệu ứng vào toggle (KHÔNG sửa logic gốc)
+ClickButton.MouseButton1Click:Connect(function()
+	task.wait(0.01) -- đợi toggle gốc chạy
+	
+	if ToggleOn then
+		Status.Text = "ON"
+		Status.TextColor3 = Color3.fromRGB(0,255,100)
+		Notify("Auto Parry Enabled")
+	else
+		Status.Text = "OFF"
+		Status.TextColor3 = Color3.fromRGB(255,80,80)
+		Notify("Auto Parry Disabled")
+	end
+end)
